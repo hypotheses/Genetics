@@ -1,0 +1,49 @@
+----------------------------------------------------
+Imputation of GeneSTAR data with 1000 genome project
+----------------------------------------------------
+Date: 10/22/2012
+Bhoom Suktitipat, MD, PhD
+____________________________________________________
+SNPs on autosomes genotyped [/research/imp_data/users/bhoom/1kg/genotype/aasnps_1000g.txt] with Illumina 1M_v1 on the forward strand with Hardy-Weinberg equilibrium P > 1x10-6 were included in the dataset for imputation (817821 from 1990 European Americans, 818154 from 1203 African Americans).  Unphased genotype data were phased using IMPUTE2 assuming Ne = 15000 by 5Mb interval.  Phased genotype data were imputed to 1000 genome reference data (phase 1 released March 2012) using the Cosmopolitan reference haplotype approach implemented in IMPUTE2. 
+
+REFERENCE DATA [see extractSNP.sh]
+- 1000 genome phased data and recombination map in [/research/imp_data/users/bhoom/1kg/phased/{aa,ea}]
+[/research/imp_data/users/bhoom/1kg/genotype/aasnps_1000g.txt] : List of SNPs to be used for imputation
+
+GENESTAR GWAS DATA FOR IMPUTATION [see extractSNP.sh]
+- After SNPs on forward strands were chosen. Positional information of these variants were updated to genome build 37 using liftover [/research/imp_data/users/bhoom/1kg/genotype/extractSNP.sh] Plink binary format files contain all markers were split into text format pedigree file and map file by chromosome using PLINK. [/research/imp_datqa/users/bhoom/1kg/genotype/{aa,ea}_chr] using [/research/imp_data/users/bhoom/1kg/genotype/extractSNP.sh] and map files were updated using the R script generated from extractSNP.sh
+
+CONVERT FILE TO IMPUTE FORMAT [see prephasing.sh]
+- The pedigree and map files were then converted to file format for IMPUTE2 [/research/3rd_imp_datqa/users/bhoom/1kg/preimputeFile/{aa,ea}] using gtool [/research/3rd_imp_datqa/users/bhoom/1kg/preimputeFile/prephasing.sh]
+
+PHASE DATA [see phase.sh]
+- impute2 was then used to phase [[/research/3rd_imp_datqa/users/bhoom/1kg/phased/phase.sh] each chromosome is split into a 5Mb region during phasing, section of the chromosome with no variants will return no phased output. These segments were omitted from the subsequent imputation
+
+- Phased data are in [/research/3rd_imp_data/users/bhoom/1kg/phased/{aa,ea}]
+
+IMPUTE TO 1KG PANEL [see impute2.sh]
+- Phased data are then used to impute variants from 1000 genome project using [/research/3rd_imp_datqa/users/bhoom/1kg/imputed/impute2.sh] impute2.sh used the start and ending position of genotype data [/research/imp_data/users/bhoom/1kg/genotype/map_location.txt] split each chromosome into a 5Mb region during imputation. 
+
+- Imputed genotype probability data in impute format are in [/research/3rd_imp_data/users/bhoom/1kg/imputed/{aa,ea}] To save disk space genotype probability files were compressed.
+
+- INFO FILE (file ending with info.gz) contain the following columns [See http://mathgen.stats.ox.ac.uk/impute/output_file_options.html]
+snp_id rs_id position exp_freq_a1 info certainty type info_type0 concord_type0 r2_type0
+1. SNP identifier from -g file (snp_id)
+2. rsID (rs_id)
+3. base pair position (position)
+4. expected frequency of allele coded '1' in the -o file (exp_freq_a1)
+5. measure of the observed statistical information associated with the allele frequency estimate (info) 
+		[This metric is similar to the r-squared metrics reported by other programs like MaCH and Beagle. Although each of these metrics is defined differently, they tend to be correlated.
+		Our metric typically takes values between 0 and 1, where values near 1 indicate that a SNP has been imputed with high certainty. The metric can occasionally take negative values when the imputation is very uncertain, and we automatically assign a value of -1 when the metric is undefined (e.g., because it wasn't calculated).
+		Investigators often use the info metric to remove poorly imputed SNPs from their association testing results. There is no universal cutoff value for post-imputation SNP filtering; various groups have used cutoffs of 0.3 and 0.5, for example, but the right threshold for your analysis may differ. One way to assess different info thresholds is to see whether they produce sensible Q-Q plots, although we emphasize that Q-Q plots can look bad for many reasons besides your post-imputation filtering scheme.
+		We define our info metric and compare it against other metrics in a review paper that we recently published. If you have questions, please read that material first, then contact us if anything is still unclear. ]
+6. average certainty of best-guess genotypes (certainty)
+7. internal "type" assigned to SNP (type) 
+
+CONVERT GENOTYPE PROBABILITY TO DOSAGE [see convert_prob2dose.sh, and prob2dose.pl]
+- Genotype probability is converted to dosage using a perl script [/research/3rd_imp_data/users/bhoom/1kg/dosage/convert_prob2dose.sh], which call prob2dose.sh. prob2dose.sh created "premlinfo" file from genotype probability files [/research/3rd_imp_data/users/bhoom/1kg/imputed/{aa,ea}/imputed_{aa,ea}_chr${CHR}_pc${i}.gz] containing the first 5 columns or genotype probability file. "
+
+- conversion of genotype probability to dosage format was done using dosage/prob2dose.sh which called prob2dose.pl
+
+FINDING SEGMENT OF THE GENOME
+- If you want to locate which file contains a specific segment of the genome, please see file_index.txt generated using file_index.sh in this directory
